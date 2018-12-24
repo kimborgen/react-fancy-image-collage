@@ -1,0 +1,10 @@
+.fancy-image-collage {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-auto-flow: column;
+}
+
+.fic__image {
+    width: 20vw;
+}
