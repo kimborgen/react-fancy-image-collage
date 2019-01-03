@@ -347,6 +347,52 @@ class FancyImageCollage extends Component {
     // this.strokeShapes(c)
   }
 
+  lineTouch = (_line1, _line2) => {
+    // check if any of the points are the same
+    let line1 = [ [_line1.p1.x, _line1.p2.x], [_line1.p1.y, _line1.p2.y ] ]
+    let line2 = [ [_line2.p1.x, _line2.p2.x], [_line2.p1.y, _line2.p2.y ] ]
+
+    for (let i = 0; i < line1.length; i++) {
+      for (let j = 0; j < line2.length; j++) {
+        if (line1[0][i] === line2[0][j]) {
+          if (line1[1][i] === line2[1][j]) {
+            return true
+          }
+        }
+      }
+    }
+    return false
+
+
+
+    // check if x is within line1 x
+    //  if so check if y is within line 1 y
+    //  Since lines can be defined in any way (ex p2 has smaller x than p1) we have
+    //  to check both ways) 
+
+    /*
+    let p1xP1P2 = line1.p1.x <= line2.p1.x && line2.p1.x <= line1.p2.x 
+                    0               138           138           219     true
+    let p1xP2P1 = line1.p2.x <= line2.p1.x && line2.p1.x <= line1.p1.x
+                      219           138           138           0         false
+    let p2xP1P2 = line1.p1.x <= line2.p2.x && line2.p2.x <= line1.p2.x 
+                      0             921           921           219||||     false
+    let p2xP2P1 = line1.p2.x <= line2.p2.x && line2.p2.x <= line1.p1.x
+                      219           921           921           0       false
+
+    if (p1xP1P2 || p1xP2P1 || p2xP1P2 || p2xP2P1) {
+      let p1yP1P2 = line1.p1.y <= line2.p1.y && line2.p1.y <= line1.p2.y
+      let p1yP2P1 = line1.p2.y <= line2.p1.y && line2.p1.y <= line1.p1.y
+      let p2yP1P2 = line1.p1.y <= line2.p2.y && line2.p2.y <= line1.p2.y
+      let p2yP2P1 = line1.p2.y <= line2.p2.y && line2.p2.y <= line1.p1.y
+      if (p1yP1P2 || p1yP2P1 || p2yP1P2 || p2yP2P1) {
+        // now we know that the two lines intersect
+        return true
+      }
+    }
+    return false
+    */
+  }
   findLine = async () => {
     console.log("Debug: findLine: before shapes", _.cloneDeep(this.state.shapes))
     // pick a random shape
