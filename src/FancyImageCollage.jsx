@@ -81,9 +81,6 @@ class FancyImageCollage extends Component {
     return { urls: props.images }
   }
 
-    // Divide pictures into containers
-    let nImages = props.numOfImages
-    console.log("number of images: ", nImages)
     
   makeRefs = () => {
     let objs = []
@@ -350,6 +347,195 @@ class FancyImageCollage extends Component {
     // this.strokeShapes(c)
   }
 
+  findLine = async () => {
+    console.log("Debug: findLine: before shapes", _.cloneDeep(this.state.shapes))
+    // pick a random shape
+    let rndShape = Math.floor(Math.random()*this.state.shapes.length)
+    console.log("Debug: rndShape:", rndShape)
+    let shape = this.state.shapes[rndShape]
+    
+    // pick a random line from shape
+    let rnd1 = Math.floor(Math.random()*shape.length)
+    // pick a second random line that is not the first one
+    let rnd2 = rnd1
+    while(rnd2 === rnd1) {
+        rnd2 = Math.floor(Math.random()*shape.length)
+    }
+    let line1 = shape[rnd1]
+    let line2 = shape[rnd2]
+    console.log("Debug: picked two lines: ", rnd1, rnd2)
+    
+    // pick a random point on both lines
+    // Should maybe disable picking end points?
+    // let point1 = new Point(rndInterval(line1.p1.x, line1.p2.x), rndInterval(line1.p1.y, line1.p2.y)) 
+    // let point2 = new Point(rndInterval(line2.p1.x, line2.p2.x), rndInterval(line2.p1.y, line2.p2.y))
+
+    let rndNewLine = Math.random()
+    let point1x = (1 - rndNewLine) * line1.p1.x  + rndNewLine * line1.p2.x
+    let point1y = (1 - rndNewLine) * line1.p1.y + rndNewLine * line1.p2.y
+    let point1 = new Point(point1x, point1y)
+
+    rndNewLine = Math.random()
+    let point2x = (1 - rndNewLine) * line2.p1.x  + rndNewLine * line2.p2.x
+    let point2y = (1 - rndNewLine) * line2.p1.y + rndNewLine * line2.p2.y
+    let point2 = new Point(point2x, point2y)
+    
+    console.log("Debug: picked two random points on those lines: ", point1, point2)
+    let newLine = new Line(point1, point2)
+    console.log("Debug: newLine: ", newLine)
+    // now split the original lines at the new points
+    let line1_split1 = new Line(line1.p1, point1)
+    let line1_split2 = new Line(line1.p2, point1)
+    let line2_split1 = new Line(line2.p1, point2)
+    let line2_split2 = new Line(line2.p2, point2)
+
+    // gather the new lines into a new shape
+    let lines = JSON.parse(JSON.stringify(shape))
+    // replace line1 and line2
+    lines[rnd1] = line1_split1
+    lines[rnd2] = line1_split2
+    // and add the two other
+    lines.push(line2_split1)
+    lines.push(line2_split2)
+
+    console.log("Debug: lines after setup: ", lines)
+    // We don't add the newLine because it is the divider
+    
+    // Algorithm to split the shape, keep track of every line you pick
+    // 1. Pick a random line L1 
+    // 2. Find both lines (L2 & L3) that touch L1
+    // 3. If L1 touches the newLine
+    // 3.1  If L2 & L3 touches newLine we have triangle shape somewhere
+    // 3.2  Choose L2 or L3, whichever do not touch newLine => L4  
+    // 4. else pick L2 => L4
+    // 5. Find the line L5 that touches L4 but is not L1
+    // 6. If L5 touches newLine then you have the first shape if not repeat by goto 5.
+    // 6.1  Make new shape with all the lines you picked and newLine
+    // 6.2  Make another shape with all the lines you did not pick and newLine
+    // 7. Delete the original shape from this.state.shapes and add the two new ones
+
+    // we dont really need to pick a random one so just use the first
+
+    let currentPick = 0
+    let pickedLines = [currentPick]
+    let touchingLines = []
+    let pickedLinesTmp = []
+		for (let i = 0; i < lines.length; i++) {
+      touchingLines = []
+			for (let j = 0; j < lines.length; j++){
+				if (pickedLines.includes(j)) continue
+				if (this.lineTouch(lines[j], lines[currentPick])) {
+					touchingLines.push(j)
+				}
+      }
+      
+      console.log("Debug: currentPick: ", currentPick)
+      console.log("Debug: touchingLines: ", touchingLines)
+
+			if (( i === 0 && touchingLines.length !== 2) || (i !== 0 && touchingLines.length !== 1)) {
+        console.log("Error: lines: ", lines)
+        console.log("Error: pickedLines: ", pickedLines)
+				console.log("Error: touchingLines - should contain 1-2 elems: ", touchingLines)
+      }
+
+      // check if touchingLines also touch the newLine
+      let touching = touchingLines.map((line) => { 
+        return this.lineTouch(lines[line], newLine)
+      })
+
+      console.log("Debug: touching: ", touching)
+
+      if (touching.every( (line) => { return line } )) {
+        console.log( touchingLines.length, " lines touch")
+        if (touchingLines.length === 1) {
+          currentPick = touchingLines[0]
+        } else {
+          let pointMatch1 = this.linePointTouch3(lines[touchingLines[0]],
+            newLine, lines[currentPick])
+          let pointMatch2 = this.linePointTouch3(lines[touchingLines[1]], 
+            newLine, lines[currentPick])
+          console.log("Debug: pointMatch 1, 2: ", pointMatch1, pointMatch2)
+          if (!pointMatch1 && !pointMatch2) {
+            pickedLines.push(touchingLines[0])
+            pickedLines.push(touchingLines[1])
+            break
+          } else if (!pointMatch1) {
+            currentPick = touchingLines[0]
+          } else if (!pointMatch2) {
+            currentPick = touchingLines[1]
+          } else {
+            console.log("Error: should nto show")
+          }
+        }
+      } else {
+        for (let j = 0; j < touchingLines.length; j++) {
+          if (touching[j]) {
+            let pointMatch = this.linePointTouch3(lines[touchingLines[j]],
+              newLine, lines[currentPick])
+            console.log("Debug: 3 Lines to match: " , lines[touchingLines[j]],
+              newLine, lines[currentPick])
+            console.log("Debug: 3lines pointMatch: ", pointMatch)
+            if (pointMatch) {
+              continue
+            } else {
+              currentPick = touchingLines[j]
+              pickedLinesTmp = pickedLinesTmp.concat(touchingLines
+                .slice(j+1, touchingLines.length))
+              console.log("Debug: pickedLinesTmp: ", pickedLinesTmp)
+              break
+            }
+          } else {
+            // if both currentLine and next touchingLine touches the newLine then don't include it
+            if (j === touchingLines.length - 1 || (this.lineTouch(lines[currentPick], newLine) && touching[j+1])) {
+              currentPick = touchingLines[j]
+              break
+            } else {
+              currentPick = touchingLines[j]
+              pickedLinesTmp = pickedLinesTmp.concat(touchingLines
+                .slice(j+1, touchingLines.length))
+              console.log("Debug: pickedLinesTmp: ", pickedLinesTmp)
+              break
+            }
+          }
+        }
+      }
+
+			pickedLines.push(currentPick)
+			// check if this new line touches the newLine
+      console.log("Debug: pickedLines at the end: ", pickedLines)
+      if (this.lineTouch(lines[currentPick], newLine)) {
+        console.log("Debug: currentPick and new line did touch")
+        // now we go back to the pickedLinesTmp if there are any
+        if (pickedLinesTmp.length > 1) {
+          console.log("Error: pickedLinesTmp is not the correct size")
+        }
+        if (pickedLinesTmp.length === 1) {
+          currentPick = pickedLinesTmp[0]
+          pickedLinesTmp = []
+          pickedLines.push(currentPick)
+          if (this.lineTouch(lines[currentPick], newLine)) {
+            console.log("Debug: at the end of loop")
+            console.log("Debug: pickedLines: ", pickedLines)
+            break
+          }
+        } else {
+          break
+        }
+			}
+		}
+    for (let i = 0; i < pickedLines.length; i++) {
+      for (let j = 0; j < pickedLines.length; j++) {
+        if (i === j) continue
+        if (pickedLines[i] === pickedLines[j]) {
+          console.log("\n ERROR: same value in pickedvalues: ", pickedLines, "\n")
+        }
+      }
+    }
+    
+    await this.newShapes(lines, newLine, pickedLines, rndShape)		
+    //this.state.shapes = [ lines , [newLine] ]
+    console.log("Debug: findLine: after shapes", _.cloneDeep(this.state.shapes))
+  }
   render() {
     return (
       <Container>
