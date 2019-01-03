@@ -113,6 +113,45 @@ class FancyImageCollage extends Component {
       screenHeight: window.innerHeight,
     })
   }
+
+  /*
+  /// Draw the layout
+  tmpdrawLayout = () => {
+    const canvas = this.refs.canvas
+    let c = canvas.getContext("2d")
+    let firstImg = this.state.objs[0]
+    let video = this.state.objs[1]
+    let firstImagePattern = c.createPattern(firstImg, "no-repeat")
+    video.addEventListener('play', () => {
+      function step() {
+        let videoPattern = c.createPattern(video, "no-repeat")
+        c.fillStyle = videoPattern
+        let scaleFactorX = 1000 / video.videoWidth 
+        let scaleFactorY = 1000 / video.videoHeight 
+        c.beginPath()
+        c.moveTo(0,0)
+        c.lineTo(1000, 0)
+        c.lineTo(1000, 1000)
+        c.closePath()
+        c.scale(scaleFactorX, scaleFactorY)
+        c.fill()
+        c.stroke()
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        requestAnimationFrame(step)
+      }
+      requestAnimationFrame(step)
+    })
+
+    firstImg.onload = () => {
+      let objDim = [firstImg.width, firstImg.height]
+      let p1 = [0,0]
+      let p2 = [0,1000]
+      let p3 = [1000,1000]
+      this.drawTriangle(c, firstImg, objDim, p1, p2 ,p3)
+    }
+  }
+  */
+
   drawShape = (c, pattern, scaleX, scaleY, shape) => {
     console.log("Debug: drawShape: shape ", shape)
     c.fillStyle = pattern
@@ -249,6 +288,43 @@ class FancyImageCollage extends Component {
       }
     }
   }
+
+  strokeShapes = () => { 
+    const canvas = this.refs.canvas
+    let c = canvas.getContext("2d")
+    console.log("Drawing this: ", this.state.shapes)
+    let s = -1
+    for (let shape of this.state.shapes) {
+      s++
+      for (let i = 0; i < shape.length; i++) {
+        console.log("whaW")
+        let line = shape[i]
+        c.moveTo(line.p1.x, line.p1.y)
+        c.lineTo(line.p2.x, line.p2.y)
+        c.stroke()
+        c.font = "15px georgia"
+        let x = Math.min(line.p1.x, line.p2.x) + 0.5 * Math.max(line.p2.x, line.p1.x)
+        let y = Math.min(line.p1.y, line.p2.y) + 0.5 * Math.max(line.p2.y, line.p1.y)
+        if (x > 970) x = 970
+        if (x < 30) x = 30
+        if (y > 970) y = 970
+        if (y < 30) y = 30
+        c.fillText(s + "," + i, x, y) 
+      }
+    }
+  }
+
+  btnPress = () => {
+
+    this.findLine()
+
+    console.log("Debug: this.state.shapes: ", JSON.parse(JSON.stringify(this.state.shapes)))
+    
+    const canvas = this.refs.canvas
+    let c = canvas.getContext("2d")
+    this.strokeShapes(c)
+  }
+
   generateLayout = async () => {
     let corner0 = new Point(0,0)
     let corner1 = new Point(this.state.canvasWidth, 0)
