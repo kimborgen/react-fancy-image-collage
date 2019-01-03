@@ -113,7 +113,29 @@ class FancyImageCollage extends Component {
       screenHeight: window.innerHeight,
     })
   }
+  generateLayout = async () => {
+    let corner0 = new Point(0,0)
+    let corner1 = new Point(this.state.canvasWidth, 0)
+    let corner2 = new Point(this.state.canvasWidth, this.state.canvasHeight)
+    let corner3 = new Point(0,this.state.canvasHeight)
+
+    let cornerLine0 = new Line(corner0, corner1)
+    let cornerLine1 = new Line(corner1, corner2)
+    let cornerLine2 = new Line(corner2, corner3)
+    let cornerLine3 = new Line(corner3, corner0)
+
+    let startShape =  [ cornerLine0, cornerLine1, cornerLine2, cornerLine3 ]   
+    await this.setState( {
+      shapes: [ startShape ] 
     })
+    
+    //await this.findLine()
+    
+    for (let i = 0; i < this.state.urls.length - 1; i++) {
+      await this.findLine()
+    }
+    console.log("Debug: this.state.shapes: ", JSON.parse(JSON.stringify(this.state.shapes))) 
+    // this.strokeShapes(c)
   }
 
   render() {
