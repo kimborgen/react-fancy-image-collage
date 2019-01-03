@@ -2,22 +2,17 @@ import React, { Component } from 'react'
 import './fancyImageCollage.css'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-
-let minPics = 2
-let maxPics = 8
-let minSplit = 2
-let maxSplit = 4
+var _ = require('lodash')
 
 const Container = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width:  50vw;
-  heigth: 50vh;
-  border: 1px solid yellow;
+  width: 100vw;
+  height: 100vh;
 `
 
-const Img = styled.img`
+const HiddenImg = styled.img`
   width: 100%;
+height: 100%;
+display: none;
 `
 
 /// main component
@@ -26,10 +21,13 @@ class FancyImageCollage extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      images: [],
+      urls: [],
       screenWidth: window.innerWidth,
-      screenHeigth: window.innerHeigth,
+      screenHeight: window.innerHeight,
+      canvasWidth: 1000,
+      canvasHeight: 1000,
     }
+    this.objRefs = []
   }
   
   componentDidMount() {
@@ -42,30 +40,37 @@ class FancyImageCollage extends Component {
 
   static getDerivedStateFromProps = (props,state) => {
     /// if images prop contains more than the wanted number of images then reduce to exact
-    const shuffled = props.images.sort(() => .5 - Math.random())  
+    //const shuffled = props.images.sort(() => .5 - rndInterval())  
     //get sub-array of first n elements AFTER shuffle 
-    let selected = shuffled.slice(0, props.numOfImages)
+    //let selected = shuffled.slice(0, props.numOfImages)
 
-    let imageGrid = []
+    return { urls: props.images }
+  }
 
     // Divide pictures into containers
     let nImages = props.numOfImages
     console.log("number of images: ", nImages)
     
-    // Find out how many containers we should split into 
-    let rndSplit = Math.random(minSplit, maxSplit)
-    console.log("RndSplit: ", rndSplit)
-  
-    let averagePicsPerSplit = Math.floor(nImages / rndSplit)
-    
-    // mix the average by a small random value
-    let mixAverage = Math.random(averagePicsPerSplit / minPics)
-    console.log("mixAverage: ", mixAverage)
-    
-    // find the images per split 
-    let nImagesPerSplit = []
-    return { images: imageGrid }
+  makeRefs = () => {
+    let objs = []
+    for (let url of this.state.urls) {
+      if (url.includes("png") || url.includes("jpg") || url.includes("jpeg")) {
+        let img = new Image()
+        img.src = url
+        objs.push(img)
+      } else {
+        let video = document.createElement("video")
+        video.src = url
+        video.autoPlay = true
+        video.loop = true
+        video.muted = true
+        video.play()
+        objs.push(video)
   }
+    }
+    this.objRefs = objs
+  }
+
 
   // on screen rezizing event, update variables
   updateWindowDim = () => {
@@ -81,8 +86,12 @@ class FancyImageCollage extends Component {
         <canvas className="canvas" ref="canvas" 
           width={this.state.canvasWidth} height={this.state.canvasHeight} />
           {
-            this.state.images.map((image) => {
-              return <Img />
+          this.state.urls.map((url, index) => {
+            if (url.includes("png") || url.includes("jpg") || url.includes("jpeg")) {
+              return <HiddenImg src={url} ref={this.refs[index]} />
+            } else {
+              return <video autoPlay loop src={url} ref={this.refs[index]} style={{"display": "none", "width": "100%", "height": "1000%"}}/>
+            } 
             })
           }                
         
