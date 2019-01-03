@@ -536,6 +536,36 @@ class FancyImageCollage extends Component {
     //this.state.shapes = [ lines , [newLine] ]
     console.log("Debug: findLine: after shapes", _.cloneDeep(this.state.shapes))
   }
+
+
+	newShapes = async (lines, newLine, iFirstShapeLines, iShape) => {
+		let iLines = lines.map((l, i) => { return i })
+		// set difference
+		let iSecondShapeLines = iLines.filter(x => !iFirstShapeLines.includes(x))	
+
+		let firstShape = [ newLine ]
+		for (let iLine of iFirstShapeLines) {
+			firstShape.push(lines[iLine])
+		}
+		
+		let secondShape = [ newLine ]
+		for (let iLine of iSecondShapeLines) {
+			secondShape.push(lines[iLine])
+		}
+    console.log("lines: ", lines)
+    console.log("iFirstShapeLines: ", iFirstShapeLines)
+    console.log("iSecond: ", iSecondShapeLines)
+    console.log("firstShape: ", firstShape)
+    console.log("secondShape: ", secondShape)
+
+    let shapes_ = _.cloneDeep(this.state.shapes) 
+		shapes_[iShape] = firstShape
+    shapes_.push(secondShape)
+    await this.setState({
+      shapes: shapes_
+    })
+	}
+
   render() {
     return (
       <Container>
