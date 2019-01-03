@@ -78,13 +78,14 @@ class FancyImageCollage extends Component {
   render() {
     return (
       <Container>
-        <Container>
+        <canvas className="canvas" ref="canvas" 
+          width={this.state.canvasWidth} height={this.state.canvasHeight} />
           {
             this.state.images.map((image) => {
               return <Img />
             })
           }                
-        </Container>
+        
       </Container>
     );
   }
