@@ -393,6 +393,54 @@ class FancyImageCollage extends Component {
     return false
     */
   }
+
+  similarElements = (points) => {
+    let possiblePaths = []
+    for (let i = 0; i < 2; i++) {
+      let m = points[0][i]
+      for (let j = 0; j < 2; j++) {
+        let n = points[1][j]
+        if (m === n) {
+          for (let k = 0; k < 2; k++) {
+            let p = points[2][k]
+            if (p === n) {
+              // now we have 3 equal
+              possiblePaths.push([i, j, k])
+            }
+          }
+        }
+      }
+    }
+    if (possiblePaths.length > 0) {
+      return possiblePaths
+    }
+    return false
+  }
+
+  linePointTouch3 = (line1, line2, line3) => {
+    // We first find every matching 3 x'es and then check if one of those pairs have corre
+    // sponding y values
+
+    let matchingX = []
+    let xes = [[line1.p1.x, line1.p2.x], [line2.p1.x, line2.p2.x], [line3.p1.x, line3.p2.x]]
+    let yes = [[line1.p1.y, line1.p2.y], [line2.p1.y, line2.p2.y], [line3.p1.y, line3.p2.y]]
+    let xMatch = this.similarElements(xes)
+    if (xMatch === false) return false
+    
+    let yMatch = this.similarElements(yes)
+    if (yMatch === false) return false
+    console.log("x, y", xes, yes)
+    console.log("xMatch yMatch ", xMatch, yMatch)
+    for (let m of xMatch) {
+      for (let n of yMatch) {
+        if (_.isEqual(m,n)) {
+          return true
+        }
+      }
+    }
+    return false 
+  }
+
   findLine = async () => {
     console.log("Debug: findLine: before shapes", _.cloneDeep(this.state.shapes))
     // pick a random shape
