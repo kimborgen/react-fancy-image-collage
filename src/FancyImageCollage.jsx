@@ -113,6 +113,68 @@ class FancyImageCollage extends Component {
       screenHeight: window.innerHeight,
     })
   }
+  drawShape = (c, pattern, scaleX, scaleY, shape) => {
+    console.log("Debug: drawShape: shape ", shape)
+    c.fillStyle = pattern
+    c.beginPath()
+    c.moveTo(shape[0].p1.x, shape[0].p1.y)
+    for (let i = 0; i < shape.length; i++) {
+      c.lineTo(shape[i].p2.x, shape[i].p2.y)
+    }
+    c.closePath()
+    //c.stroke()
+    c.scale(scaleX, scaleY)
+    c.fill()
+    c.setTransform(1,0,0,1,0,0)
+  }
+  draw = () => {
+    console.log("Debug: draw: objRefs ", this.objRefs)
+    const canvas = this.refs.canvas
+    let c = canvas.getContext("2d")
+    for (let i = 0; i < this.state.shapes.length; i++) {
+      let pattern = c.createPattern(this.objRefs[i], "no-repeat")
+      console.log("Debug: draw: pattern ", pattern, " with obj: ", this.objRefs[i])
+      if (this.objRefs[i].toString().includes("Image")) {
+        this.objRefs[i].onload = () => {
+          console.log("Debug: draw: drawing image ", i)
+          let scaleX = this.state.canvasWidth / this.objRefs[i].width
+          let scaleY = this.state.canvasHeight / this.objRefs[i].height
+          this.drawShape(c, pattern, scaleX, scaleY, this.state.shapes[i])
+        }
+      } else if (this.objRefs[i].toString().includes("Video")) {
+        let video = this.objRefs[i]
+        let canvasWidth = this.state.canvasWidth
+        let canvasHeight = this.state.canvasHeight
+        video.addEventListener('loadedmetadata', () => {
+          console.log("Debug: draw: drawing video ", i)
+          let scaleX = canvasWidth / video.videoWidth
+          let scaleY = canvasHeight / video.videoHeight
+          console.log("Debug: draw: step: ", video.videoWidth)
+          let shape = this.state.shapes[i]
+          function step() {
+            //console.log("Debug: draw: video ", i, " step", video)
+            let pattern = c.createPattern(video, "no-repeat")
+            c.fillStyle = pattern
+            c.beginPath()
+            c.moveTo(shape[0].p1.x, shape[0].p1.y)
+            for (let i = 0; i < shape.length; i++) {
+              c.lineTo(shape[i].p2.x, shape[i].p2.y)
+            }
+            c.closePath()
+            //c.stroke()
+            c.scale(scaleX, scaleY)
+            c.fill()
+            c.setTransform(1,0,0,1,0,0)
+            requestAnimationFrame(step)
+          }
+          requestAnimationFrame(step)
+        })
+      
+      } else {
+        console.log("Error: The element was neither an image or a video")
+      }
+    }
+  }
   generateLayout = async () => {
     let corner0 = new Point(0,0)
     let corner1 = new Point(this.state.canvasWidth, 0)
