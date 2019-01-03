@@ -127,6 +127,80 @@ class FancyImageCollage extends Component {
     c.fill()
     c.setTransform(1,0,0,1,0,0)
   }
+
+  // line 1 stays the same, line2 either placed in front or back 
+  orderPoints = (line1,line2) => {
+    line2 = _.cloneDeep(line2)
+    console.log("Debug: orderPoints: line1 and line2", line1, line2)
+    if (line1.p1.x === line2.p1.x && line1.p1.y === line2.p1.y) {
+      // place <- , and switch p1 and p2
+      console.log("Debug: orderPoints: 1")
+      let tmpP1 = _.cloneDeep(line2.p1)
+      line2.p1 = _.cloneDeep(line2.p2)
+      line2.p2 = tmpP1
+      return [false, line2]
+    } else if (line1.p1.x === line2.p2.x && line1.p1.y === line2.p2.y) {
+      console.log("Debug: orderPoints: 2")
+      // place <- , do nothing
+      return [false, line2]
+    } else if (line1.p2.x === line2.p1.x && line1.p2.y === line2.p1.y) {
+      // place -> , do nothing
+      console.log("Debug: orderPoints: 3")
+      return [true, line2]
+    } else if (line1.p2.x === line2.p2.x && line1.p2.y === line2.p2.y) {
+      // place -> , switch p1 and p2
+      console.log("Debug: orderPoints: 4")
+      let tmpP1 = _.cloneDeep(line2.p1)
+      line2.p1 = _.cloneDeep(line2.p2)
+      line2.p2 = tmpP1
+      return [true, line2]
+    } else {
+      console.log("Error: what")
+    }
+  }
+
+  orderLines = (shape) => {
+    console.log("Debug: orderLines: original shape: ", shape)
+    let iCurrentLine = 0
+    let newShape = [ shape[ iCurrentLine ] ]
+    shape = shape.slice(1,shape.length)
+    while(shape.length != 0) {
+      for (let i = 0; i < shape.length; i++) {
+        console.log("Debug: orderLines: newShape before if", iCurrentLine, newShape)
+        if (this.lineTouch(newShape[iCurrentLine], shape[i])) {
+          let ret = this.orderPoints(newShape[iCurrentLine], shape[i])
+          console.log("Debug: orderLines: iCur", iCurrentLine)
+          if (!ret[0]) { 
+            newShape.splice(iCurrentLine,0, ret[1])
+          } else {
+            newShape.splice(iCurrentLine + 1,0, ret[1])
+          }
+          console.log("Debug: orderLines: newShape", newShape)
+          shape = shape.slice(0,i).concat(shape.slice(i+1,shape.length))
+          break
+        }
+      }
+      iCurrentLine++
+    }
+    console.log("Debug: orderLines: after shape: ", newShape)
+    return newShape
+  }
+
+  orderShapes = async () => {
+    let shapes = _.cloneDeep(this.state.shapes)
+    let newShapes = []
+    for (let shape of shapes) {
+      let newShape = this.orderLines(_.cloneDeep(shape))
+      if (newShape.length !== shape.length) {
+        console.log("Error: newShape not of same length")
+      }
+      newShapes.push(newShape)
+    }
+    await this.setState({
+      shapes: newShapes
+    })
+  }
+
   draw = () => {
     console.log("Debug: draw: objRefs ", this.objRefs)
     const canvas = this.refs.canvas
