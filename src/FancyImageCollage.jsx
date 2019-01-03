@@ -22,6 +22,7 @@ class FancyImageCollage extends Component {
     super(props)
     this.state = {
       urls: [],
+      shapes: [],
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
       canvasWidth: 1000,
@@ -30,8 +31,14 @@ class FancyImageCollage extends Component {
     this.objRefs = []
   }
   
-  componentDidMount() {
+  async componentDidMount() {
     window.addEventListener('resize', this.updateWindowDim);
+    this.makeRefs()
+    await this.generateLayout()
+    //await this.strokeShapes()
+    await this.orderShapes()
+    console.log("Debug this.state.shapes before draw", this.state.shapes)
+    await this.draw()
   }
 
   componentWillUnmount() {
@@ -76,7 +83,9 @@ class FancyImageCollage extends Component {
   updateWindowDim = () => {
     this.setState({
       screenWidth: window.innerWidth,
-      screenHeigth: window.innerHeigth,
+      screenHeight: window.innerHeight,
+    })
+  }
     })
   }
 
