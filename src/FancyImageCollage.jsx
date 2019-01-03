@@ -15,6 +15,33 @@ height: 100%;
 display: none;
 `
 
+
+
+function rndInterval(min,max) // min and max included
+{
+  if (max < min) {
+    let tmpMax = max
+    max = min
+    min = tmpMax 
+  }
+  return Math.floor(Math.random()*(max-min+1)+min);
+}
+
+
+class Point {
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+  }
+}
+
+class Line {
+  constructor(p1, p2) {
+    this.p1 = p1
+    this.p2 = p2
+  }
+}
+
 /// main component
 class FancyImageCollage extends Component {
 
